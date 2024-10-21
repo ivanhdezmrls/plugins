@@ -1,0 +1,69 @@
+// To paste in codesnippets
+
+// This update the email contact in fluentcrm if the user change his email in wordpress or in paid membership pro profile
+
+// Code:
+
+ONLY EMAIL:
+add_action('profile_update', 'sync_fluentcrm_email_with_wp', 10, 2);
+add_action('pmpro_personal_options_update', 'sync_fluentcrm_email_with_wp', 10, 1);
+
+function sync_fluentcrm_email_with_wp($user_id, $old_user_data = null) {
+    // Verificar si FluentCRM está activo
+    if (!class_exists('FluentCrm\App\Models\Subscriber')) {
+        return;
+    }
+
+    // Obtener los datos actuales del usuario
+    $user = get_userdata($user_id);
+    
+    // Buscar el contacto de FluentCRM basado en el ID de usuario de WordPress
+    $contact = FluentCrm\App\Models\Subscriber::where('user_id', $user_id)->first();
+
+    // Si existe el contacto y los emails no coinciden
+    if ($contact && $contact->email !== $user->user_email) {
+        // Actualiza el email del contacto en FluentCRM
+        $contact->email = $user->user_email;
+        $contact->save();
+    }
+}
+
+
+-----------------------------------------------------------
+
+// EMAIL AN A FIELD CALLED "TU_TELEFONO" (CUSTOM USER FIELD)
+
+add_action('profile_update', 'sync_fluentcrm_contact_with_wp', 10, 2);
+add_action('pmpro_personal_options_update', 'sync_fluentcrm_contact_with_wp', 10, 1);
+
+function sync_fluentcrm_contact_with_wp($user_id, $old_user_data = null) {
+    // Verificar si FluentCRM está activo
+    if (!class_exists('FluentCrm\App\Models\Subscriber')) {
+        return;
+    }
+
+    // Obtener los datos actuales del usuario
+    $user = get_userdata($user_id);
+    
+    // Obtener el número de teléfono del meta key 'tu_telefono'
+    $telefono = get_user_meta($user_id, 'tu_telefono', true);
+    
+    // Buscar el contacto de FluentCRM basado en el ID de usuario de WordPress
+    $contact = FluentCrm\App\Models\Subscriber::where('user_id', $user_id)->first();
+
+    // Si existe el contacto y los datos no coinciden
+    if ($contact) {
+        // Actualizar el email si es diferente
+        if ($contact->email !== $user->user_email) {
+            $contact->email = $user->user_email;
+        }
+
+        // Actualizar el teléfono si es diferente
+        if (!empty($telefono) && $contact->phone !== $telefono) {
+            $contact->phone = $telefono;
+        }
+
+        // Guardar los cambios en FluentCRM
+        $contact->save();
+    }
+}
