@@ -1,0 +1,28 @@
+// If the user complete a page add a tag in fluent crm (automation)
+
+// You have to change the post ID, and the name of the tag. My tag: "termino7dias"
+
+CODE:
+
+// Hook que verifica si el post 452 está completado y asigna la etiqueta en FluentCRM
+add_action('template_redirect', 'asignar_etiqueta_fluentcrm_al_completar_post');
+
+function asignar_etiqueta_fluentcrm_al_completar_post() {
+
+    $post_id = 452;
+
+    if ( apply_filters( 'wpcomplete_page_is_completed', $post_id ) ) {
+
+        $user_id = get_current_user_id();
+
+        if ($user_id) {
+            $user = get_user_by('ID', $user_id);
+            $email = $user->user_email;
+
+            // Usar el modelo Subscriber de FluentCRM para agregar la etiqueta
+            FluentCrm\App\Models\Subscriber::where('email', $email)
+                ->first()
+                ->attachTags(['termino7dias']);
+        }
+    }
+}
